@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routes import router
+from routes import main_routes, test_routes
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from ultralytics import YOLO
@@ -64,4 +64,7 @@ app.add_middleware(
 
 
 
-app.include_router(router)
+
+app.include_router(main_routes.router, prefix="/api", tags=["API"])
+
+app.include_router(test_routes.router, prefix="/test", tags=["Test"])
