@@ -2,12 +2,19 @@ from fastapi import FastAPI
 from routes import router
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
+from ultralytics import YOLO
+import mediapipe as mp
 
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Life Cycle Started!")
+
+    app.state.model = YOLO("artifacts/yolov8n.pt")
+    app.state.mp_face = mp.solutions.face_detection
+    app.state.mp_hands = mp.solutions.hands
+
     yield
 
     print("shutting down...")

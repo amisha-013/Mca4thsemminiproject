@@ -1,0 +1,91 @@
+import cv2
+import os
+import time
+
+def run_pipeline(image, model, mp_face, mp_hands):
+
+    h, w, _ = image.shape
+    rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    # ===== create request folder =====
+    req_id = str(int(time.time()*1000))
+    save_dir = os.path.join("crops", req_id)
+
+    os.makedirs(save_dir, exist_ok=True)
+
+    persons = []
+    faces = []
+    hands_list = []
+
+    # ===== YOLO =====
+    results = model(image, conf=0.3)[0]
+
+    for i, box in enumerate(results.boxes):
+
+        cls = int(box.cls[0])
+
+        if cls == 0:
+
+            x1,y1,x2,y2 = map(int, box.xyxy[0])
+
+            crop = image[y1:y2, x1:x2]
+
+            path = f"{save_dir}/person_{i}.jpg"
+            cv2.imwrite(path, crop)
+
+            persons.append(path)
+
+    # ===== FACE =====
+    with mp_face.FaceDetection(
+        model_selection=0,
+        min_detection_confidence=0.8
+    ) as face:
+
+        res = face.process(rgb)
+
+        if res.detections:
+
+            for j, det in enumerate(res.detections):
+
+                bbox = det.location_data.relative_bounding_box
+
+                x1 = int(bbox.xmin*w)
+                y1 = int(bbox.ymin*h)
+                bw = int(bbox.width*w)
+                bh = int(bbox.height*h)
+
+                crop = image[y1:y1+bh, x1:x1+bw]
+
+                path = f"{save_dir}/face_{j}.jpg"
+                cv2.imwrite(path, crop)
+
+                faces.append(path)
+
+    # ===== HAND =====
+    with mp_hands.Hands(
+        static_image_mode=True,
+        max_num_hands=2,
+        min_detection_confidence=0.4
+    ) as hands:
+
+        res = hands.process(rgb)
+
+        if res.multi_hand_landmarks:
+
+            for k, hand in enumerate(res.multi_hand_landmarks):
+
+                xs = [int(lm.x*w) for lm in hand.landmark]
+                ys = [int(lm.y*h) for lm in hand.landmark]
+
+                crop = image[min(ys):max(ys), min(xs):max(xs)]
+
+                path = f"{save_dir}/hand_{k}.jpg"
+                cv2.imwrite(path, crop)
+
+                hands_list.append(path)
+
+    return {
+        "persons": persons,
+        "faces": faces,
+        "hands": hands_list
+    }

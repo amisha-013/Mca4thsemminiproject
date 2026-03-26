@@ -1,6 +1,11 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException,Request
 import shutil
 import os
+import numpy as np
+import cv2
+from services import run_pipeline
+
+
 
 router = APIRouter()
 @router.get("/")
@@ -27,3 +32,20 @@ async def upload_image(file: UploadFile = File(...)):
         "file": file.filename,
         "yolo": yolo_result
     }
+
+
+@router.post("/detect")
+async def detect(request: Request, file: UploadFile = File(...)):
+
+    contents = await file.read()
+
+    nparr = np.frombuffer(contents, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+    model = request.app.state.model
+    mp_face = request.app.state.mp_face
+    mp_hands = request.app.state.mp_hands
+
+    result = run_pipeline(img, model, mp_face, mp_hands)
+
+    return result

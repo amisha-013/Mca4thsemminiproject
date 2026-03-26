@@ -3,9 +3,13 @@ name = "backend"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.10,<3.11"
 dependencies = [
     "fastapi>=0.135.2",
+    "matplotlib>=3.10.8",
+    "mediapipe==0.10.21",
+    "opencv-python>=4.11.0.86",
     "python-multipart>=0.0.22",
+    "ultralytics>=8.4.27",
     "uvicorn>=0.42.0",
 ]
