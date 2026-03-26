@@ -1,6 +1,13 @@
 import cv2
 import os
 import torch
+import ollama
+
+
+model_name = "project-model"
+
+def build_prompt(score: float) -> str:
+    return f"Analyze this image. The predicted quality score is {score}/10. What visual characteristics can you identify?"
 
 
 def run_pipeline(image, model, mp_face, mp_hands, save_dir):
@@ -102,3 +109,18 @@ def get_image_score(image, model, transform, device):
         score = (0.7 * confidence) + (0.3 * entropy_score)
 
     return score
+
+
+async def generate_response(score, image):
+
+    response = ollama.generate(
+        model=model_name,
+        prompt=build_prompt(score),
+        images=[image],
+        stream=False
+    )
+
+    return {
+        "score": score,
+        "response": response["response"]
+    }
