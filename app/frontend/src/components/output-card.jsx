@@ -47,7 +47,7 @@ export function OutputCard({data}) {
         </div>
       </Card>
       <Button variant="secondary" className="text-3xl w-fit px-8 py-5">
-        Socre - {data.score}
+        Score - {data.score}
       </Button>
     </div>
   );

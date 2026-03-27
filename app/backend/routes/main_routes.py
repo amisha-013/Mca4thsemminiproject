@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 import time
 import shutil
-from services import run_pipeline, get_image_score,generate_response
+from services import run_pipeline, get_image_score,generate_response,response_format
 from PIL import Image
 import io
 
@@ -85,8 +85,10 @@ async def analyze(request: Request,file: UploadFile = File(...)):
 
     try:
         result = await generate_response(final_score, contents)
+        result = response_format(result)
         return {
-            "image_name": file.filename
+            "image_name": file.filename,
+            "score": final_score,
             **result,
         }
     except Exception as e:

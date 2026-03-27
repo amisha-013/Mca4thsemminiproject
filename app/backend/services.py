@@ -2,12 +2,13 @@ import cv2
 import os
 import torch
 import ollama
+import re
 
 
 model_name = "project-model"
 
 def build_prompt(score: float) -> str:
-    return f"Analyze this image. The predicted quality score is {score}/10. What visual characteristics can you identify?"
+    return f"Analyze this image. The predicted quality score is {score}/10. What visual characteristics can you identify?. Give me a summery, key observations and a conclusion."
 
 
 def run_pipeline(image, model, mp_face, mp_hands, save_dir):
@@ -124,3 +125,38 @@ async def generate_response(score, image):
         "score": score,
         "response": response["response"]
     }
+
+
+
+def safe_extract(text, start, end=None):
+    try:
+        if end:
+            pattern = rf"{start}(.*?){end}"
+        else:
+            pattern = rf"{start}(.*)"
+
+        match = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
+        return match.group(1).strip() if match else ""
+    except:
+        return ""
+
+
+def response_format(response):
+    text = response.get("response", "")
+    text = text.replace("\n", " ")
+
+    summery = safe_extract(text, "summary:", "key observations:")
+    key_obs = safe_extract(text, "key observations:", "conclusion:")
+    conclusion = safe_extract(text, "conclusion:")
+
+    # Split bullets safely
+    key_observations = [
+        item.strip() for item in key_obs.split("-") if item.strip()
+    ]
+
+    return {
+        "summery": summery,
+        "key_observations": key_observations,
+        "conclusion": conclusion
+    }
+    
