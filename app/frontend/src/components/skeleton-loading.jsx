@@ -28,7 +28,7 @@ export function SkeletonLoading() {
       <div>
         <Badge variant="secondary" className={"p-3 rounded-md"}>
           <Spinner data-icon="inline-start" />
-          Generating Summary
+          Generating Summery
         </Badge>
       </div>
     </div>
